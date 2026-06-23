@@ -5,7 +5,7 @@ from io import BytesIO
 # ✅ CONFIGURAÇÃO
 st.set_page_config(
     page_title="Comparador de Contratos",
-    page_icon="flor_icon.png",
+    page_icon="flor_icon.JPG",
     layout="centered"
 )
 
@@ -14,7 +14,7 @@ topo_col1, topo_col2 = st.columns([1, 8])
 
 with topo_col1:
     try:
-        st.image("logo.png", width=90)
+        st.image("logo.JPG", width=90)
     except:
         st.write("")
 

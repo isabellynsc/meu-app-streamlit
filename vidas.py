@@ -12,7 +12,7 @@ st.set_page_config(
 # ✅ LOGO CENTRALIZADA
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
-    st.image("logo.png", width=200)
+    st.image("logo.JPG", width=200)
 
 # ✅ TÍTULO CENTRALIZADO
 st.markdown(

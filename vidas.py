@@ -2,22 +2,22 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-# ✅ CONFIGURAÇÃO DA PÁGINA
+# ✅ CONFIGURAÇÃO
 st.set_page_config(
     page_title="Comparador de Contratos",
     page_icon="📊",
     layout="centered"
 )
 
-# ✅ LOGO (PROTEGIDA PRA NÃO QUEBRAR)
+# ✅ LOGO CENTRALIZADA E SEGURA
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     try:
         st.image("logo.JPG", width=200)
     except:
-        st.write("")  # evita erro se a logo não estiver disponível
+        st.write("")
 
-# ✅ TÍTULO CORRETO (HTML SEM ERRO)
+# ✅ TÍTULO
 st.markdown(
     "<h1 style='text-align: center;'>📊 Comparador de Contratos</h1>",
     unsafe_allow_html=True
@@ -25,12 +25,12 @@ st.markdown(
 
 st.write("Faça upload das bases para identificar contratos que saíram.")
 
-# ✅ UPLOAD DOS ARQUIVOS
+# ✅ UPLOAD
 base_antiga_file = st.file_uploader("Base Antiga", type=["csv", "xlsx"])
 base_atual_file = st.file_uploader("Base Atual", type=["csv", "xlsx"])
 
 
-# ✅ FUNÇÃO OTIMIZADA COM CACHE
+# ✅ FUNÇÃO OTIMIZADA
 @st.cache_data
 def carregar_arquivo(arquivo):
     if arquivo.name.endswith(".csv"):
@@ -47,22 +47,55 @@ def carregar_arquivo(arquivo):
             dtype=str
         )
 
-    # limpar colunas
     df.columns = df.columns.str.strip().str.upper()
 
-    # limpar valores
-    df["RETENCAO"] = df["RETENCAO"].str.strip().str.upper()
+    # ✅ filtro mais rápido
+    mask = df["RETENCAO"].str.strip().str.upper().eq("SIM")
+    df = df.loc[mask, ["CONTRATO"]]
 
-    # filtrar direto
-    df = df[df["RETENCAO"] == "SIM"]
-
-    # remover duplicados
-    df = df.drop_duplicates(subset="CONTRATO")
-
-    return df
+    return df.drop_duplicates()
 
 
-# ✅ PROCESSAMENTO
+# ✅ FLUXO CORRETO (BOTÃO APARECE SEM TRAVAR)
 if base_antiga_file and base_atual_file:
 
-    base_antiga = carregar_arquivo(base_antiga_file)
+    st.success("✅ Arquivos carregados! Agora clique no botão para processar.")
+
+    if st.button("🚀 Processar"):
+
+        with st.spinner("Processando dados..."):
+
+            base_antiga = carregar_arquivo(base_antiga_file)
+            base_atual = carregar_arquivo(base_atual_file)
+
+            st.write(f"Base antiga: {len(base_antiga)} registros")
+            st.write(f"Base atual: {len(base_atual)} registros")
+
+            # ✅ comparação mais eficiente (pandas)
+            resultado = base_antiga.merge(
+                base_atual,
+                on="CONTRATO",
+                how="left",
+                indicator=True
+            )
+
+            resultado = resultado[resultado["_merge"] == "left_only"]
+            resultado = resultado.drop(columns=["_merge"])
+
+        st.success(f"✅ {len(resultado)} contratos removidos encontrados")
+
+        # ✅ MOSTRAR MENOS DADOS (performance)
+        st.dataframe(resultado.head(50))
+        st.info(f"Mostrando 50 de {len(resultado)} registros")
+
+        # ✅ DOWNLOAD
+        buffer = BytesIO()
+        resultado.to_excel(buffer, index=False, engine="openpyxl")
+        buffer.seek(0)
+
+        st.download_button(
+            label="📥 Baixar Excel completo",
+            data=buffer,
+            file_name="contratos_removidos.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )

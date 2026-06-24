@@ -5,7 +5,7 @@ from io import BytesIO
 # ✅ CONFIGURAÇÃO
 st.set_page_config(
     page_title="Comparador de Contratos",
-    page_icon="flor_icon.JPG",
+    page_icon="flor_icon.png",
     layout="centered"
 )
 

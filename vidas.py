@@ -1,9 +1,9 @@
-
 import streamlit as st
 import pandas as pd
 from io import BytesIO
-import time
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # ✅ CONFIGURAÇÃO
 st.set_page_config(
@@ -12,9 +12,13 @@ st.set_page_config(
     layout="centered"
 )
 
-# ✅ DIAGNÓSTICO DE INICIALIZAÇÃO
+# ✅ HORÁRIO LOCAL (FORTALEZA)
+hora_local = datetime.now(
+    ZoneInfo("America/Fortaleza")
+)
+
 st.caption(
-    f"✅ Aplicação iniciada às {time.strftime('%H:%M:%S')}"
+    f"✅ Aplicação iniciada às {hora_local.strftime('%H:%M:%S')}"
 )
 
 # ✅ HEADER
@@ -22,6 +26,7 @@ topo_col1, topo_col2 = st.columns([1, 8])
 
 with topo_col1:
     logo = Path("logo.JPG")
+
     if logo.exists():
         st.image(str(logo), width=90)
 
@@ -31,7 +36,9 @@ with topo_col2:
         unsafe_allow_html=True
     )
 
-st.write("Faça upload das bases para identificar contratos que saíram.")
+st.write(
+    "Faça upload das bases para identificar contratos que saíram."
+)
 
 # ✅ PARÂMETROS
 st.subheader("📅 Parâmetros de Projeção")
@@ -50,9 +57,11 @@ dias_totais = colB.number_input(
     step=0.5
 )
 
-st.caption("Sábado conta como 0.5 dia. Domingos e feriados não entram.")
+st.caption(
+    "Sábado conta como 0.5 dia. Domingos e feriados não entram."
+)
 
-# ✅ UPLOAD
+# ✅ UPLOAD DOS ARQUIVOS
 base_antiga_file = st.file_uploader(
     "Base Antiga",
     type=["csv", "xlsx"]
@@ -81,15 +90,24 @@ def carregar_arquivo(arquivo):
             dtype=str
         )
 
-    df.columns = df.columns.str.strip().str.upper()
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.upper()
+    )
 
-    mask = df["RETENCAO"].str.strip().str.upper().eq("SIM")
+    mask = (
+        df["RETENCAO"]
+        .str.strip()
+        .str.upper()
+        .eq("SIM")
+    )
 
     df = df.loc[mask, ["CONTRATO"]]
 
     return df.drop_duplicates()
 
-# ✅ FUNÇÃO BASE COMPLETA
+# ✅ BASE COMPLETA
 @st.cache_data
 def carregar_base_completa(arquivo):
 
@@ -105,10 +123,17 @@ def carregar_base_completa(arquivo):
             dtype=str
         )
 
-    df.columns = df.columns.str.strip().str.upper()
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.upper()
+    )
 
     df = df[
-        df["RETENCAO"].str.strip().str.upper() == "SIM"
+        df["RETENCAO"]
+        .str.strip()
+        .str.upper()
+        == "SIM"
     ]
 
     df = df.drop_duplicates(
@@ -122,15 +147,18 @@ def carregar_base_completa(arquivo):
 
     return df
 
-# ✅ CACHE DO EXCEL
+# ✅ GERAÇÃO DO EXCEL
 @st.cache_data
 def gerar_excel(df):
+
     buffer = BytesIO()
+
     df.to_excel(
         buffer,
         index=False,
         engine="openpyxl"
     )
+
     return buffer.getvalue()
 
 # ✅ EXECUÇÃO
@@ -150,7 +178,9 @@ if base_antiga_file and base_atual_file:
 
         else:
 
-            with st.spinner("Processando dados..."):
+            with st.spinner(
+                "Processando dados..."
+            ):
 
                 # CONTRATOS REMOVIDOS
                 base_antiga = carregar_arquivo(
@@ -169,7 +199,8 @@ if base_antiga_file and base_atual_file:
                 )
 
                 resultado = resultado[
-                    resultado["_merge"] == "left_only"
+                    resultado["_merge"]
+                    == "left_only"
                 ]
 
                 resultado = resultado.drop(
@@ -208,7 +239,7 @@ if base_antiga_file and base_atual_file:
                     resultado
                 )
 
-            # RESULTADOS
+            # ✅ RESULTADOS
             st.success(
                 f"✅ {len(resultado)} contratos removidos encontrados"
             )
@@ -228,8 +259,10 @@ if base_antiga_file and base_atual_file:
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
-            # DASHBOARD
-            st.subheader("📊 Resumo de Vidas")
+            # ✅ DASHBOARD
+            st.subheader(
+                "📊 Resumo de Vidas"
+            )
 
             col1, col2, col3 = st.columns(3)
 
@@ -255,10 +288,13 @@ if base_antiga_file and base_atual_file:
             )
 
             if faltante > 0:
+
                 st.warning(
                     f"Faltam {faltante} vidas para atingir a meta de 10.000"
                 )
+
             else:
+
                 st.success(
                     "✅ Meta atingida!"
                 )

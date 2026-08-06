@@ -4,34 +4,83 @@ from io import BytesIO
 
 st.set_page_config(
     page_title="Comparador de Contratos",
+    page_icon="📊",
     layout="wide"
 )
 
-st.title("Comparador de Contratos")
-st.write("Faça upload das bases para identificar contratos removidos.")
+st.markdown("""
+<style>
+.main {
+    padding-top: 1rem;
+}
+div[data-testid="stMetric"] {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid #dfe3e8;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
 
-dias_trabalhados = st.number_input(
-    "Dias úteis até o período analisado",
-    min_value=1.0,
-    value=23.0
+#LOGO
+try:
+    col_logo1, col_logo2, col_logo3 = st.columns([1,2,1])
+
+    with col_logo2:
+        st.image("logo.JPG", width=250)
+except:
+    pass
+st.markdown(
+    """
+    <h1 style='text-align:center; margin-bottom:0;'>
+        Comparador de Contratos
+    </h1>
+
+    <p style='text-align:center;
+                color:#666666;
+                font-size:18px;'>
+        Compare bases e identifique contratos removidos.
+    </p>
+    <hr>
+    """,
+    unsafe_allow_html=True
 )
 
-dias_totais = st.number_input(
-    "Total de dias úteis do mês",
-    min_value=1.0,
-    value=23.0
-)
+st.markdown("### 📅 Parâmetros de Projeção")
 
-base_antiga = st.file_uploader(
-    "Base Antiga",
-    type=["xlsx", "csv"]
-)
+col1, col2 = st.columns(2)
 
-base_atual = st.file_uploader(
-    "Base Atual",
-    type=["xlsx", "csv"]
-)
+with col1:
+    dias_trabalhados = st.number_input(
+        "Dias úteis até o período analisado",
+        min_value=1.0,
+        value=25.0
+    )
 
+with col2:
+    dias_totais = st.number_input(
+        "Total de dias úteis do mês",
+        min_value=1.0,
+        value=25.0
+    )
+
+st.markdown("### 📂 Upload das Bases")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    base_antiga = st.file_uploader(
+        "📂 Base Antiga",
+        type=["xlsx", "csv"]
+    )
+
+with col2:
+    base_atual = st.file_uploader(
+        "📂 Base Atual",
+        type=["xlsx", "csv"]
+    )
 
 def ler_base(arquivo):
     if arquivo.name.lower().endswith(".csv"):
@@ -54,8 +103,12 @@ def ler_base(arquivo):
 
     return df
 
-
-if st.button("🚀 PROCESSAR"):
+st.markdown("---")
+if st.button(
+    "🚀 PROCESSAR CONTRATOS",
+    use_container_width=True,
+    type="primary"
+):
 
     try:
 
@@ -151,38 +204,54 @@ if st.button("🚀 PROCESSAR"):
             0
         )
 
-        col1, col2, col3 = st.columns(3)
-
-        col1.metric(
-            "Removidos",
-            len(resultado_final)
-        )
-
-        col2.metric(
-            "Total Vidas",
-            total_vidas
-        )
-
-        col3.metric(
-            "Projeção",
-            projecao
-        )
-
         st.success(
             f"{len(resultado_final)} contratos removidos encontrados."
         )
 
-        st.write(
-            f"🎯 Faltante para 10.000: {faltante:,}"
-        )
+        st.markdown("---")
+        st.markdown("### 📊 Indicadores")
+        
+        col1, col2, col3 = st.columns(3)
 
-        st.write(
-            f"👤 PF: {pf:,}"
-        )
+        with col1:
+            st.metric(
+                "Removidos",
+                f"{len(resultado_final):,}"
+            )
 
-        st.write(
-            f"🏢 PME: {pme:,}"
-        )
+        with col2:
+            st.metric(
+                "Total Vidas",
+                f"{total_vidas:,}"
+            )
+
+        with col3:
+            st.metric(
+                "Projeção",
+                f"{projecao:,}"
+            )
+
+        st.markdown("### 📌 Resumo")
+
+        r1, r2, r3 = st.columns(3)
+
+        with r1:
+            st.metric(
+                "Faltante para 10.000",
+                f"{faltante:,}"
+            )
+
+        with r2:
+            st.metric(
+                "PF",
+                f"{pf:,}"
+            )
+
+        with r3:
+            st.metric(
+                "PME",
+                f"{pme:,}"
+            )
 
         buffer = BytesIO()
 
@@ -196,7 +265,8 @@ if st.button("🚀 PROCESSAR"):
             label="📥 EXPORTAR EXCEL",
             data=buffer.getvalue(),
             file_name="contratos_removidos.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True
         )
 
     except Exception as erro:

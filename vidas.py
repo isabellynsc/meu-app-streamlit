@@ -119,22 +119,43 @@ if st.button(
         antiga = ler_base(base_antiga)
         atual = ler_base(base_atual)
 
+#Padroniza contrato
+        antiga["CONTRATO"] = antiga["CONTRATO"].astype(str).str.strip()
+        
+        atual["CONTRATO"] = atual["CONTRATO"].astype(str).str.strip()
+
+#Filtra apenas retençao = SIM
         antiga_filtrada = antiga[
             antiga["RETENCAO"]
             .str.strip()
             .str.upper()
             .eq("SIM")
-        ][["CONTRATO"]].drop_duplicates()
+        ].copy()
 
         atual_filtrada = atual[
             atual["RETENCAO"]
             .str.strip()
             .str.upper()
             .eq("SIM")
-        ][["CONTRATO"]].drop_duplicates()
+        ].copy()
 
-        resultado = antiga_filtrada.merge(
-            atual_filtrada,
+#Remove duplicadas
+        antiga_filtrada = antiga_filtrada.drop_duplicates(
+            subset=["CONTRATO"],
+            keep="first"
+        )
+
+        atual_filtrada = atual_filtrada.drop_duplicates(
+            subset=["CONTRATO"],
+            keep="first"
+        )
+
+# Mantém apenas a coluna contrato para comparação
+        antiga_comp = antiga_filtrada[["CONTRATO"]]
+        atual_comp = atual_filtrada[["CONTRATO"]]
+
+        resultado = antiga_comp.merge(
+            atual_comp,
             on="CONTRATO",
             how="left",
             indicator=True
@@ -146,24 +167,12 @@ if st.button(
 
         contratos_removidos = resultado["CONTRATO"]
         
-        resultado_final = antiga[
-            antiga["CONTRATO"]
+        resultado_final = antiga_filtrada[
+            antiga_filtrada["CONTRATO"]
             .isin(contratos_removidos)
         ].copy()
 
-        base_calc = atual.copy()
-
-        base_calc = base_calc[
-            base_calc["RETENCAO"]
-            .str.strip()
-            .str.upper()
-            .eq("SIM")
-        ]
-
-        base_calc = base_calc.drop_duplicates(
-            subset="CONTRATO"
-        )
-
+        base_calc = atual_filtrada.copy()
 
         base_calc["VIDAS"] = pd.to_numeric(
             base_calc["VIDAS"],

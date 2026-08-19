@@ -209,7 +209,7 @@ if st.button(
         )
 
         faltante = max(
-            10000 - total_vidas,
+            8000 - total_vidas,
             0
         )
 
@@ -246,7 +246,7 @@ if st.button(
 
         with r1:
             st.metric(
-                "Faltante para 10.000",
+                "Faltante para 8.000",
                 f"{faltante:,}"
             )
 
